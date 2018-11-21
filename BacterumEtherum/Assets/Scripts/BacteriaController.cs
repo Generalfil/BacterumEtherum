@@ -38,7 +38,7 @@ namespace Assets.Scripts
 			if (InitDone)
 			{
 				TickTime += Time.deltaTime;
-				if (TickTime >= 0.5f)
+				if (TickTime >= 0.3f)
 				{
 					
 					if (tickDone)
@@ -54,7 +54,7 @@ namespace Assets.Scripts
 
 		private void Tick()
 		{
-			Debug.Log("Tick");
+			//Debug.Log("Tick");
 			Co1();
 			tickDone = true;
 		}
@@ -64,13 +64,21 @@ namespace Assets.Scripts
 			var grownBac = new List<GameObject>();
 			foreach (var bac in BacteriaList)
 			{
-				/*List<GameObject> baseBacterias = bac.GetComponent<BaseBacteria>().CheckAdjecentPos();
-				Co2(bac, baseBacterias);*/
+
 				//Check for empty
 				Vector3 emptyPos = bac.GetComponent<BaseBacteria>().CheckEmptyAdjecentPos();
-				if(emptyPos.x != -1)
-					if (bac.GetComponent<BaseBacteria>().Grow())
-						grownBac.Add(CreateBacteria(emptyPos, bac.GetComponent<BaseBacteria>().Guid, bac.GetComponent<Renderer>().material.color));
+				if (emptyPos.x != -2)
+				{ 
+					if (emptyPos.x != -1)
+						if (bac.GetComponent<BaseBacteria>().Grow(emptyPos))
+							grownBac.Add(CreateBacteria(emptyPos, bac.GetComponent<BaseBacteria>().Guid, bac.GetComponent<Renderer>().material.color, false));
+				}
+				else
+				{
+					//Todo When not growing, Check once for surrondings, 
+					/*List<GameObject> baseBacterias = bac.GetComponent<BaseBacteria>().CheckAdjecentPos();
+					Co2(bac, baseBacterias);*/
+				}
 			}
 			BacteriaList.AddRange(grownBac);
 			return null;
@@ -103,20 +111,26 @@ namespace Assets.Scripts
 			foreach (var v3 in vector3s)
 			{
 				var guid = Guid.NewGuid();
-				BacteriaList.Add(CreateBacteria(v3, guid, new Color(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value, 1.0f)));
+				BacteriaList.Add(CreateBacteria(v3, guid, new Color(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value, 1.0f), true));
 			}
 			InitDone = true;
 		}
 
-		private GameObject CreateBacteria(Vector3 v3, Guid guid, Color color)
+		private GameObject CreateBacteria(Vector3 v3, Guid guid, Color color, bool initialBac)
 		{
 			GameObject BacteriaObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
 			BacteriaObj.AddComponent<BaseBacteria>().Position = v3;
+			BacteriaObj.transform.position = v3;
 			BacteriaObj.GetComponent<BaseBacteria>().SetCheckArr();
 			BacteriaObj.GetComponent<BaseBacteria>().Guid = guid;
+			if (!initialBac)
+			{
+				if (BacteriaObj.GetComponent<BaseBacteria>().Mutate())
+					color = new Color(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value, 1.0f);
+			}
 			BacteriaObj.GetComponent<BaseBacteria>().DeclareAlive();
 			BacteriaObj.GetComponent<Renderer>().material.color = color;
-			BacteriaObj.transform.position = v3;
+
 			return BacteriaObj;
 		}
 	}

@@ -12,8 +12,9 @@ namespace Assets.Scripts
 		public Guid Guid { get; set; }
 
 		protected float Health;
-		protected float Growchance;
+		protected float GrowChance;
 		protected float Attack;
+		protected float MutateChance;
 		
 
 		private System.Random random;
@@ -22,20 +23,21 @@ namespace Assets.Scripts
 		public BaseBacteria(): base()
 		{
 			random = new System.Random();
-			float healthMod = CalculateHealthModifier(3,10);
+			float healthMod = CalculateModifier(3,10);
 
 			this.Health = 10f + healthMod;
-			this.Growchance = 0.1f;
+			this.GrowChance = 0.1f;
 			this.Attack = 1f;
+			this.MutateChance = 0.04f;
 		}
 
 		public BaseBacteria(float health, float growChance, float attack, Guid guid)
 		{
 			random = new System.Random();
-			float healthMod = CalculateHealthModifier(3, 10);
+			float healthMod = CalculateModifier(3, 10);
 
 			this.Health = health + healthMod;
-			this.Growchance = growChance;
+			this.GrowChance = growChance;
 			this.Attack = attack;
 			this.Guid = guid;
 		}
@@ -54,12 +56,17 @@ namespace Assets.Scripts
 		}
 		public Vector3 CheckEmptyAdjecentPos()
 		{
-			var AdjacentBac = new Vector3();
-			List<Vector3> eligblePos = CheckArr.Where(pos => pos.x <= 30 && pos.x >= 0 && pos.z <= 30 && pos.z >= 0).ToList();
-
-			if (eligblePos != null)
+			if (CheckArr.Count < 1)
 			{
-				AdjacentBac = eligblePos.ElementAt(random.Next(0, eligblePos.Count - 1));
+				return new Vector3(-2, -2, -2);
+			}
+
+			var AdjacentBac = new Vector3();
+			List<Vector3> posWithinMapNotNull = CheckArr.Where(pos => pos.x <= 30 && pos.x >= 0 && pos.z <= 30 && pos.z >= 0).ToList();
+
+			if (posWithinMapNotNull != null)
+			{
+				AdjacentBac = posWithinMapNotNull.ElementAt(random.Next(0, posWithinMapNotNull.Count - 1));
 				if (FindAt(AdjacentBac) == null)
 					return AdjacentBac;
 				else
@@ -82,10 +89,11 @@ namespace Assets.Scripts
 		public void AttackOther(GameObject m_gameObject)
 		{ }
 
-		public bool Grow()
+		public bool Grow(Vector3 growPos)
 		{
-			if (random.Next(1, 100) <= 100*Growchance)
+			if (random.Next(1, 100) <= 100*GrowChance)
 			{
+				CheckArr.Remove(CheckArr.FirstOrDefault(x => x == growPos));
 				Debug.Log("Growing");
 				return true;
 			}
@@ -95,13 +103,33 @@ namespace Assets.Scripts
 			}	
 		}
 
-		protected void Mutate()
-		{ }
+		public bool Mutate()
+		{
+			random = new System.Random();
+			if (random.Next(0, 100) <= 100 * MutateChance)
+			{
+				float healthMod = CalculateModifier(3, 10);
+				float attackMod = CalculateModifier(3, 10);
+				float growMod = CalculateModifier(3, 5);
+				float mutateMod = CalculateModifier(5, 3);
+				this.Health += healthMod;
+				this.Attack += attackMod;
+				if (GrowChance < 0.5f)
+					this.GrowChance += growMod/10;
+				if (MutateChance < 0.2f)
+					this.MutateChance += mutateMod;
+				else
+					this.MutateChance -= mutateMod;
+				this.Guid = Guid.NewGuid();
+				return true;
+			}
+			return false;
+		}
 
 		protected void Die()
 		{ }
 
-		private float CalculateHealthModifier(int loops, int numberToRandom)
+		private float CalculateModifier(int loops, int numberToRandom)
 		{
 			float healthMod = 0;
 			for (int i = 0; i < loops; i++)
@@ -127,6 +155,7 @@ namespace Assets.Scripts
 
 		public void SetCheckArr()
 		{
+			CheckArr = null;
 			CheckArr = new List<Vector3>()
 			{
 				new Vector3(Position.x, Position.y, Position.z + 1),
