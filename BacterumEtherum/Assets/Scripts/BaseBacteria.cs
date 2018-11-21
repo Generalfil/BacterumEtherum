@@ -8,12 +8,13 @@ namespace Assets.Scripts
 {
 	public class BaseBacteria : MonoBehaviour
 	{
-		
+		public Vector3 Position { get; set; }
+		public Guid Guid { get; set; }
+
 		protected float Health;
 		protected float Growchance;
 		protected float Attack;
-		public Vector3 Position;
-		public Guid Guid;
+		
 
 		private System.Random random;
 		private List<Vector3> CheckArr;
@@ -26,8 +27,6 @@ namespace Assets.Scripts
 			this.Health = 10f + healthMod;
 			this.Growchance = 0.1f;
 			this.Attack = 1f;
-			this.Guid = Guid.NewGuid();
-			Debug.Log("I was born: " + Guid);
 		}
 
 		public BaseBacteria(float health, float growChance, float attack, Guid guid)
@@ -50,21 +49,34 @@ namespace Assets.Scripts
 				var Bac = FindAt(chPos);
 				AdjacentBac.Add(Bac);
 			}
-
+			AdjacentBac.OrderBy(a => Guid.NewGuid()).ToList();
 			return AdjacentBac;
 		}
-		public List<Vector3> CheckEmptyAdjecentPos()
+		public Vector3 CheckEmptyAdjecentPos()
 		{
-			var AdjacentBac = new List<Vector3>();
+			var AdjacentBac = new Vector3();
+			List<Vector3> eligblePos = CheckArr.Where(pos => pos.x <= 30 && pos.x >= 0 && pos.z <= 30 && pos.z >= 0).ToList();
 
-			foreach (var chPos in CheckArr.Where(pos => pos.x <= 30 && pos.x >= 0 && pos.z <= 30 && pos.z >= 0))
+			if (eligblePos != null)
+			{
+				AdjacentBac = eligblePos.ElementAt(random.Next(0, eligblePos.Count - 1));
+				if (FindAt(AdjacentBac) == null)
+					return AdjacentBac;
+				else
+					return new Vector3(-1, -1, -1);
+			}
+			else
+			{
+				return new Vector3(-1,-1,-1);
+			}
+
+			/*foreach (var chPos in CheckArr.Where(pos => pos.x <= 30 && pos.x >= 0 && pos.z <= 30 && pos.z >= 0))
 			{
 				var Bac = FindAt(chPos);
 				if(Bac == null)
 					AdjacentBac.Add(chPos);
 			}
-
-			return AdjacentBac;
+			AdjacentBac.OrderBy(a => Guid.NewGuid()).ToList();*/
 		}
 
 		public void AttackOther(GameObject m_gameObject)
@@ -72,7 +84,7 @@ namespace Assets.Scripts
 
 		public bool Grow()
 		{
-			if (random.Next(1, 100) >= 100*Growchance)
+			if (random.Next(1, 100) <= 100*Growchance)
 			{
 				Debug.Log("Growing");
 				return true;
@@ -127,7 +139,9 @@ namespace Assets.Scripts
 				new Vector3(Position.x - 1, Position.y, Position.z - 1)
 			};
 		}
- 
-
+		public void DeclareAlive()
+		{
+			Debug.Log("I was born: " + Guid);
+		}
 	}
 }
