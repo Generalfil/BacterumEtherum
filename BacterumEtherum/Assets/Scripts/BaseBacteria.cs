@@ -19,6 +19,7 @@ namespace Assets.Scripts
 
 		private System.Random random;
 		private List<Vector3> CheckArr;
+		private List<Vector3> AttackArr;
 
 		public BaseBacteria(): base()
 		{
@@ -56,11 +57,6 @@ namespace Assets.Scripts
 		}
 		public Vector3 CheckEmptyAdjecentPos()
 		{
-			if (CheckArr.Count < 1)
-			{
-				return new Vector3(-2, -2, -2);
-			}
-
 			var AdjacentBac = new Vector3();
 			List<Vector3> posWithinMapNotNull = CheckArr.Where(pos => pos.x <= 30 && pos.x >= 0 && pos.z <= 30 && pos.z >= 0).ToList();
 
@@ -70,24 +66,27 @@ namespace Assets.Scripts
 				if (FindAt(AdjacentBac) == null)
 					return AdjacentBac;
 				else
-					return new Vector3(-1, -1, -1);
+					return AdjacentBac;
 			}
 			else
 			{
 				return new Vector3(-1,-1,-1);
 			}
-
-			/*foreach (var chPos in CheckArr.Where(pos => pos.x <= 30 && pos.x >= 0 && pos.z <= 30 && pos.z >= 0))
-			{
-				var Bac = FindAt(chPos);
-				if(Bac == null)
-					AdjacentBac.Add(chPos);
-			}
-			AdjacentBac.OrderBy(a => Guid.NewGuid()).ToList();*/
 		}
 
-		public void AttackOther(GameObject m_gameObject)
-		{ }
+		public GameObject AttackOther(Vector3 v3)
+		{
+			var gObj = FindAt(v3);
+			if (gObj.GetComponent<BaseBacteria>().Guid != Guid && gObj != null)
+			{
+				gObj.GetComponent<BaseBacteria>().Health -= this.Attack;
+				Debug.Log("Attacking" + gObj.GetComponent<BaseBacteria>().Health);
+				return gObj;
+			}
+			else
+				return null;
+		}
+
 
 		public bool Grow(Vector3 growPos)
 		{
@@ -126,8 +125,14 @@ namespace Assets.Scripts
 			return false;
 		}
 
-		protected void Die()
-		{ }
+		public bool Die()
+		{
+			if (this.Health <= 0)
+				return true;
+			else
+				return false;
+
+		}
 
 		private float CalculateModifier(int loops, int numberToRandom)
 		{
@@ -153,6 +158,22 @@ namespace Assets.Scripts
 				return null;
 		}
 
+		public void SetAttackArr()
+		{
+			AttackArr = null;
+			AttackArr = new List<Vector3>()
+			{
+				new Vector3(Position.x, Position.y, Position.z + 1),
+				new Vector3(Position.x, Position.y, Position.z - 1),
+				new Vector3(Position.x + 1, Position.y, Position.z),
+				new Vector3(Position.x - 1, Position.y, Position.z),
+				new Vector3(Position.x + 1, Position.y, Position.z + 1),
+				new Vector3(Position.x - 1, Position.y, Position.z + 1),
+				new Vector3(Position.x + 1, Position.y, Position.z - 1),
+				new Vector3(Position.x - 1, Position.y, Position.z - 1)
+			};
+		}
+
 		public void SetCheckArr()
 		{
 			CheckArr = null;
@@ -167,6 +188,11 @@ namespace Assets.Scripts
 				new Vector3(Position.x + 1, Position.y, Position.z - 1),
 				new Vector3(Position.x - 1, Position.y, Position.z - 1)
 			};
+		}
+
+		public void AddCheckArr(Vector3 v3)
+		{
+			CheckArr.Add(v3);
 		}
 		public void DeclareAlive()
 		{

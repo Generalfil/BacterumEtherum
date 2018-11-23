@@ -64,18 +64,34 @@ namespace Assets.Scripts
 			var grownBac = new List<GameObject>();
 			foreach (var bac in BacteriaList)
 			{
+				if (bac.GetComponent<BaseBacteria>().Die())
+				{
+					Destroy(bac);
+					continue;				
+				}
 
 				//Check for empty
 				Vector3 emptyPos = bac.GetComponent<BaseBacteria>().CheckEmptyAdjecentPos();
-				if (emptyPos.x != -2)
-				{ 
-					if (emptyPos.x != -1)
-						if (bac.GetComponent<BaseBacteria>().Grow(emptyPos))
+				if (emptyPos.x != -1)
+				{
+					if (bac.GetComponent<BaseBacteria>().Grow(emptyPos))
 							grownBac.Add(CreateBacteria(emptyPos, bac.GetComponent<BaseBacteria>().Guid, bac.GetComponent<Renderer>().material.color, false));
 				}
-				else
+				else if (emptyPos.x != -1 && emptyPos.x == -2)
 				{
+					Debug.Log("Attacktime");
+
 					//Todo When not growing, Check once for surrondings, 
+					var gObj = bac.GetComponent<BaseBacteria>().AttackOther(emptyPos);
+					if (gObj != null)
+					{
+						bac.GetComponent<BaseBacteria>().AddCheckArr(gObj.transform.position);
+					}
+					else
+					{
+						bac.GetComponent<BaseBacteria>().AddCheckArr(emptyPos);
+					}
+
 					/*List<GameObject> baseBacterias = bac.GetComponent<BaseBacteria>().CheckAdjecentPos();
 					Co2(bac, baseBacterias);*/
 				}
@@ -94,7 +110,7 @@ namespace Assets.Scripts
 			return null;
 		}*/
 
-		IEnumerator Co2(GameObject bac, List<GameObject> baseBacterias)
+		/*IEnumerator Co2(GameObject bac, List<GameObject> baseBacterias)
 		{
 			foreach (var posToAttack in baseBacterias)
 			{
@@ -102,7 +118,7 @@ namespace Assets.Scripts
 					bac.GetComponent<BaseBacteria>().AttackOther(posToAttack.gameObject);
 			}
 			return null;
-		}
+		}*/
 
 		private void InititializePositions()
 		{
@@ -122,13 +138,14 @@ namespace Assets.Scripts
 			BacteriaObj.AddComponent<BaseBacteria>().Position = v3;
 			BacteriaObj.transform.position = v3;
 			BacteriaObj.GetComponent<BaseBacteria>().SetCheckArr();
+			BacteriaObj.GetComponent<BaseBacteria>().SetAttackArr();
 			BacteriaObj.GetComponent<BaseBacteria>().Guid = guid;
 			if (!initialBac)
 			{
 				if (BacteriaObj.GetComponent<BaseBacteria>().Mutate())
 					color = new Color(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value, 1.0f);
 			}
-			BacteriaObj.GetComponent<BaseBacteria>().DeclareAlive();
+			//BacteriaObj.GetComponent<BaseBacteria>().DeclareAlive();
 			BacteriaObj.GetComponent<Renderer>().material.color = color;
 
 			return BacteriaObj;
