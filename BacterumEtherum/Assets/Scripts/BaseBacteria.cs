@@ -11,6 +11,12 @@ namespace Assets.Scripts
 		public Vector3 Position { get; set; }
 		public Guid Guid { get; set; }
 
+		public struct V3Empty
+		{
+			public Vector3 vector3;
+			public bool isEmpty;
+		}
+
 		protected float Health;
 		protected float GrowChance;
 		protected float Attack;
@@ -28,8 +34,8 @@ namespace Assets.Scripts
 
 			this.Health = 10f + healthMod;
 			this.GrowChance = 0.1f;
-			this.Attack = 1f;
-			this.MutateChance = 0.04f;
+			this.Attack = 2f;
+			this.MutateChance = 0.03f;
 		}
 
 		public BaseBacteria(float health, float growChance, float attack, Guid guid)
@@ -55,22 +61,33 @@ namespace Assets.Scripts
 			AdjacentBac.OrderBy(a => Guid.NewGuid()).ToList();
 			return AdjacentBac;
 		}
-		public Vector3 CheckEmptyAdjecentPos()
+		public V3Empty CheckEmptyAdjecentPos()
 		{
 			var AdjacentBac = new Vector3();
+			V3Empty localV3 = new V3Empty();
 			List<Vector3> posWithinMapNotNull = CheckArr.Where(pos => pos.x <= 30 && pos.x >= 0 && pos.z <= 30 && pos.z >= 0).ToList();
 
-			if (posWithinMapNotNull != null)
+			if (posWithinMapNotNull != null && posWithinMapNotNull.Count > 0)
 			{
 				AdjacentBac = posWithinMapNotNull.ElementAt(random.Next(0, posWithinMapNotNull.Count - 1));
 				if (FindAt(AdjacentBac) == null)
-					return AdjacentBac;
+				{
+					localV3.vector3 = AdjacentBac;
+					localV3.isEmpty = true;
+					return localV3;
+				}
 				else
-					return AdjacentBac;
+				{ 
+					localV3.vector3 = AdjacentBac;
+					localV3.isEmpty = false;
+					return localV3;
+				}
 			}
 			else
 			{
-				return new Vector3(-1,-1,-1);
+				localV3.vector3 = new Vector3(-1, -1, -1);
+				localV3.isEmpty = false;
+				return localV3;
 			}
 		}
 
@@ -107,9 +124,9 @@ namespace Assets.Scripts
 			random = new System.Random();
 			if (random.Next(0, 100) <= 100 * MutateChance)
 			{
-				float healthMod = CalculateModifier(3, 10);
-				float attackMod = CalculateModifier(3, 10);
-				float growMod = CalculateModifier(3, 5);
+				float healthMod = CalculateModifier(3, 15);
+				float attackMod = CalculateModifier(3, 20);
+				float growMod = CalculateModifier(3, 10);
 				float mutateMod = CalculateModifier(5, 3);
 				this.Health += healthMod;
 				this.Attack += attackMod;
@@ -197,6 +214,12 @@ namespace Assets.Scripts
 		public void DeclareAlive()
 		{
 			Debug.Log("I was born: " + Guid);
+		}
+
+		public void Buff()
+		{
+			this.Attack += 1;
+			this.Health += 1;
 		}
 	}
 }

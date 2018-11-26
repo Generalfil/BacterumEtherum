@@ -62,67 +62,59 @@ namespace Assets.Scripts
 		IEnumerator Co1()
 		{
 			var grownBac = new List<GameObject>();
+			var deadBac = new List<GameObject>();
+			var bacThatAttacc = new List<GameObject>();
 			foreach (var bac in BacteriaList)
 			{
 				if (bac.GetComponent<BaseBacteria>().Die())
 				{
-					Destroy(bac);
-					continue;				
+					deadBac.Add(bac);
+					Debug.Log("Dead");
+					continue;
 				}
 
 				//Check for empty
-				Vector3 emptyPos = bac.GetComponent<BaseBacteria>().CheckEmptyAdjecentPos();
-				if (emptyPos.x != -1)
+				BaseBacteria.V3Empty emptyPos = bac.GetComponent<BaseBacteria>().CheckEmptyAdjecentPos();
+				if (emptyPos.isEmpty == true)
 				{
-					if (bac.GetComponent<BaseBacteria>().Grow(emptyPos))
-							grownBac.Add(CreateBacteria(emptyPos, bac.GetComponent<BaseBacteria>().Guid, bac.GetComponent<Renderer>().material.color, false));
+					if (bac.GetComponent<BaseBacteria>().Grow(emptyPos.vector3))
+						grownBac.Add(CreateBacteria(emptyPos.vector3, bac.GetComponent<BaseBacteria>().Guid, bac.GetComponent<Renderer>().material.color, false));
 				}
-				else if (emptyPos.x != -1 && emptyPos.x == -2)
+				else if (emptyPos.vector3.x != -1 && !emptyPos.isEmpty)
 				{
-					Debug.Log("Attacktime");
-
 					//Todo When not growing, Check once for surrondings, 
-					var gObj = bac.GetComponent<BaseBacteria>().AttackOther(emptyPos);
+					var gObj = bac.GetComponent<BaseBacteria>().AttackOther(emptyPos.vector3);
 					if (gObj != null)
 					{
+						Debug.Log("Attacktime");
 						bac.GetComponent<BaseBacteria>().AddCheckArr(gObj.transform.position);
+						if(!bacThatAttacc.Contains( bac))
+							bacThatAttacc.Add(bac);
+						
 					}
 					else
 					{
-						bac.GetComponent<BaseBacteria>().AddCheckArr(emptyPos);
+						bac.GetComponent<BaseBacteria>().AddCheckArr(emptyPos.vector3);
 					}
-
-					/*List<GameObject> baseBacterias = bac.GetComponent<BaseBacteria>().CheckAdjecentPos();
-					Co2(bac, baseBacterias);*/
 				}
+			}
+			foreach (var dead in deadBac)
+			{
+				BacteriaList.Remove(dead);
+				Destroy(dead);
+			}
+
+			foreach (var bacToBuff in bacThatAttacc)
+			{
+				bacToBuff.GetComponent<BaseBacteria>().Buff();
 			}
 			BacteriaList.AddRange(grownBac);
 			return null;
 		}
 
-		/*IEnumerator Co3(GameObject bac, List<Vector3> emptyPos)
-		{
-			foreach (var posToGrow in emptyPos)
-			{
-				if (bac.GetComponent<BaseBacteria>().Grow())
-					CreateBacteria(posToGrow);
-			}
-			return null;
-		}*/
-
-		/*IEnumerator Co2(GameObject bac, List<GameObject> baseBacterias)
-		{
-			foreach (var posToAttack in baseBacterias)
-			{
-				if (posToAttack != null)
-					bac.GetComponent<BaseBacteria>().AttackOther(posToAttack.gameObject);
-			}
-			return null;
-		}*/
-
 		private void InititializePositions()
 		{
-			Vector3[] vector3s = new Vector3[] {new Vector3(1,0,15), new Vector3(15, 0, 1), new Vector3(15, 0, 29), new Vector3(29, 0, 15), };
+			Vector3[] vector3s = new Vector3[] {new Vector3(1,0,15), new Vector3(15, 0, 1), new Vector3(15, 0, 29), new Vector3(29, 0, 15), new Vector3(15,0,15) };
 
 			foreach (var v3 in vector3s)
 			{
@@ -134,7 +126,7 @@ namespace Assets.Scripts
 
 		private GameObject CreateBacteria(Vector3 v3, Guid guid, Color color, bool initialBac)
 		{
-			GameObject BacteriaObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+			GameObject BacteriaObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 			BacteriaObj.AddComponent<BaseBacteria>().Position = v3;
 			BacteriaObj.transform.position = v3;
 			BacteriaObj.GetComponent<BaseBacteria>().SetCheckArr();
