@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
+using UnityEngine.UI;
 
 namespace Assets.Scripts
 {
@@ -12,6 +14,14 @@ namespace Assets.Scripts
 		private BaseBacteria[,] BacPos;
 		private List<GameObject> BacteriaList;
 		private bool InitDone = false;
+		private Text leaderText;
+
+		private struct Identifier
+		{
+			public Guid guid;
+			public Color color;
+		}
+	
 		public float TickTime;
 		public bool tickDone;
 
@@ -25,6 +35,8 @@ namespace Assets.Scripts
 			InititializePositions();
 			TickTime = 0f;
 			tickDone = true;
+			GameObject child = GameObject.Find("Number_Text");
+			leaderText = child.GetComponent<Text>();
 		}
 
 		// Update is called once per frame
@@ -103,13 +115,29 @@ namespace Assets.Scripts
 				BacteriaList.Remove(dead);
 				Destroy(dead);
 			}
-
 			foreach (var bacToBuff in bacThatAttacc)
 			{
 				bacToBuff.GetComponent<BaseBacteria>().Buff();
 			}
 			BacteriaList.AddRange(grownBac);
+
+			var Identifiers = new List<Identifier>();
+			foreach (var item in BacteriaList)
+			{
+				Identifier id = new Identifier();
+				id.guid = item.GetComponent<BaseBacteria>().Guid;
+				id.color = item.GetComponent<Renderer>().material.color;
+				Identifiers.Add(id);
+			}
+			var groupId = Identifiers.GroupBy(x => x).OrderBy(g => g.Count());
+			UpdateLeader(groupId.Last().Key, groupId.Max(x => x.Count()));
 			return null;
+		}
+
+		private void UpdateLeader(Identifier identifier, int count)
+		{
+			leaderText.text = "ID: " + identifier.guid.ToString() + "\n Count: " + count.ToString();
+			leaderText.material.color = identifier.color;
 		}
 
 		private void InititializePositions()

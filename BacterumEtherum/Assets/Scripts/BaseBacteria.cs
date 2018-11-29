@@ -22,7 +22,6 @@ namespace Assets.Scripts
 		protected float Attack;
 		protected float MutateChance;
 		
-
 		private System.Random random;
 		private List<Vector3> CheckArr;
 		private List<Vector3> AttackArr;
@@ -61,6 +60,7 @@ namespace Assets.Scripts
 			AdjacentBac.OrderBy(a => Guid.NewGuid()).ToList();
 			return AdjacentBac;
 		}
+
 		public V3Empty CheckEmptyAdjecentPos()
 		{
 			var AdjacentBac = new Vector3();
@@ -104,7 +104,6 @@ namespace Assets.Scripts
 				return null;
 		}
 
-
 		public bool Grow(Vector3 growPos)
 		{
 			if (random.Next(1, 100) <= 100*GrowChance)
@@ -125,7 +124,7 @@ namespace Assets.Scripts
 			if (random.Next(0, 100) <= 100 * MutateChance)
 			{
 				float healthMod = CalculateModifier(3, 15);
-				float attackMod = CalculateModifier(3, 20);
+				float attackMod = CalculateModifier(3, 10);
 				float growMod = CalculateModifier(3, 10);
 				float mutateMod = CalculateModifier(5, 3);
 				this.Health += healthMod;
@@ -145,7 +144,9 @@ namespace Assets.Scripts
 		public bool Die()
 		{
 			if (this.Health <= 0)
+			{
 				return true;
+			}
 			else
 				return false;
 
